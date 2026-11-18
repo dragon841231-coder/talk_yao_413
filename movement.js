@@ -110,7 +110,7 @@ async function playHandoff() {
   handoff.disabled = true;
   sceneStatus.textContent = '貓頭鷹和鹿前往休憩區碰面…';
   await Promise.all([walk(owl,owl.route.length-1),walk(deer,deer.route.length-1)]);
-  sceneStatus.textContent = '貓頭鷹把行銷分析交給鹿';
+  sceneStatus.textContent = '貓頭鷹把選題與懸念交給鹿';
   sit(owl,false);
   sit(deer,false);
   const documentCard = document.createElement('span');
@@ -125,7 +125,7 @@ async function playHandoff() {
   }
   documentCard.remove();
   deer.button.dataset.activity = '📄';
-  sceneStatus.textContent = '鹿帶著分析回工作桌寫稿';
+  sceneStatus.textContent = '鹿帶著選題回工作桌起草';
   await Promise.all([walk(owl,0),walk(deer,0)]);
   delete deer.button.dataset.activity;
   sceneStatus.textContent = '交接完成';

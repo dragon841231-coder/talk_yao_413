@@ -75,3 +75,10 @@
 @media (max-width: 520px) {
   .claude-actor .nameplate { font-size: 9px; padding: 2px 5px; }
 }
+
+textarea,select{width:100%;font:inherit;padding:8px;border:1px solid #c8cdbc;border-radius:9px;background:white;color:inherit}
+textarea{resize:vertical;min-height:110px}
+textarea:focus-visible,select:focus-visible{outline:3px solid #bd6942;outline-offset:3px}
+a.button{display:inline-flex;align-items:center;border-radius:12px;padding:10px 16px;text-decoration:none}
+.preview{margin-top:12px}.preview summary{cursor:pointer;color:#5e6d60;font-size:14px}
+.preview pre{white-space:pre-wrap;font:inherit;font-size:13px;background:#e9efdf;border-radius:12px;padding:12px;max-height:40dvh;overflow:auto}
