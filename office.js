@@ -14,6 +14,7 @@ const sample = {
 };
 let role = 'team';
 let timer;
+let activeRequest;
 function addCard(key) {
   const card = document.createElement('section');
   const heading = document.createElement('h3');
@@ -41,12 +42,72 @@ document.querySelectorAll('[data-role]').forEach(button => {
 });
 dialog.addEventListener('close', () => {
   clearTimeout(timer);
+  activeRequest?.abort();
+  activeRequest = undefined;
+  access.value = '';
   run.disabled = false;
 });
-run.addEventListener('click', () => {
+// Claude 後端網址：部署好後端後，把這裡改成後端的網址（例如 https://island-claude.xxx.workers.dev）
+const API_URL = window.ISLAND_API_URL || '/api/run';
+const access = document.querySelector('#access');
+try { localStorage.removeItem('island-access'); } catch {}
+function addText(title, text) {
+  const card = document.createElement('section');
+  const heading = document.createElement('h3');
+  const body = document.createElement('p');
+  heading.textContent = title;
+  body.textContent = text;
+  card.append(heading, body);
+  result.append(card);
+}
+async function runClaude() {
+  const value = topic.value.trim();
+  if (!value) { topic.focus(); status.textContent = '先輸入主題。'; return true; }
+  const code = access.value.trim();
+  if (!code) return false;
+  if ([...value].length > 300) { status.textContent = '主題最多 300 字。'; return true; }
+  if (!/^[!-~]+$/.test(code)) { status.textContent = '通行碼請使用半形英數或符號。'; return true; }
+  const request = new AbortController();
+  activeRequest = request;
+  run.disabled = true;
+  status.textContent = role === 'deer' ? '鹿正在寫稿…' : (role === 'team' ? '貓頭鷹分析中，完成後交給鹿寫稿…' : '貓頭鷹分析中…');
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      signal: request.signal,
+      headers: { 'Content-Type': 'application/json', 'X-Access-Code': code },
+      body: JSON.stringify({ role, topic: value })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (request.signal.aborted) return true;
+    if (res.status === 401) { status.textContent = '通行碼不正確。'; return true; }
+    if (res.status === 503) {
+      status.textContent = 'Claude 尚未啟用，以下是固定範例。';
+      return false;
+    }
+    if (!res.ok || (!data.owl && !data.deer)) throw new Error();
+    if (data.owl) addText('貓頭鷹・行銷分析', data.owl);
+    if (data.deer) addText('鹿・IG 輪播', data.deer);
+    status.textContent = role === 'team' ? '交接完成 · 由 Claude 完成' : '完成 · 由 Claude 完成';
+    return true;
+  } catch {
+    if (request.signal.aborted) return true;
+    status.textContent = 'Claude 暫時無法回應，以下是固定範例。';
+    return false;
+  } finally {
+    if (activeRequest === request) {
+      activeRequest = undefined;
+      run.disabled = false;
+    }
+  }
+}
+run.addEventListener('click', async () => {
   result.replaceChildren();
+  status.textContent = '';
+  if (await runClaude()) return;
+  const note = status.textContent;
   if (role !== 'team') {
-    status.textContent = '固定主題範例';
+    status.textContent = note || '示範模式 · 固定主題範例（輸入通行碼即可由 Claude 完成）';
     addCard(role);
     return;
   }
@@ -55,7 +116,7 @@ run.addEventListener('click', () => {
   addCard('owl');
   timer = setTimeout(() => {
     addCard('deer');
-    status.textContent = '交接完成 · 固定主題範例';
+    status.textContent = note || '交接完成 · 固定主題範例（輸入通行碼即可由 Claude 完成）';
     run.disabled = false;
   }, 850);
 });
