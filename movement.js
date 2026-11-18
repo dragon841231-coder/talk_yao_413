@@ -12,17 +12,23 @@ function employee(id, route) {
 // Waypoints follow the open aisles around the outside of the sofa.
 const owl = employee('owl', [[29,55],[32,59],[28,64],[32,71],[39,80],[43,82],[45,80]]);
 const deer = employee('deer', [[74,65],[72,70],[69,74],[63,81],[59,83],[56,80]]);
+const claudeFox = employee('claude-fox', [[54,46],[56,48],[57,45]]);
+const claudeOtter = employee('claude-otter', [[84,55],[86,56],[87,53]]);
 const place = (actor, [x,y]) => {
   actor.button.style.setProperty('--x', x + '%');
   actor.button.style.setProperty('--y', y + '%');
 };
 place(owl,owl.route[0]);
 place(deer,deer.route[0]);
+place(claudeFox,claudeFox.route[0]);
+place(claudeOtter,claudeOtter.route[0]);
 function sit(actor,seated) {
   actor.button.classList.toggle('seated',seated);
 }
 sit(owl,true);
 sit(deer,true);
+sit(claudeFox,true);
+sit(claudeOtter,true);
 async function walk(actor,destination) {
   if (actor.index === destination) return;
   sit(actor,false);
@@ -61,7 +67,10 @@ async function idle() {
   const atDesk = owl.index === 0 && deer.index === 0;
   const resting = atDesk && breaks.checked;
   sceneStatus.textContent = atDesk ? (resting ? '夥伴去沙發區休息' : '夥伴在辦公室散步') : '夥伴正在回工作桌';
-  await Promise.all([owl,deer].map(actor=>walk(actor,atDesk ? (resting ? actor.route.length-1 : 2) : 0)));
+  await Promise.all([
+    ...[owl,deer].map(actor => walk(actor, atDesk ? (resting ? actor.route.length - 1 : 2) : 0)),
+    ...[claudeFox,claudeOtter].map(actor => walk(actor, actor.index === 0 ? 2 : 0))
+  ]);
   if (resting) {
     sceneStatus.textContent = '沙發區休息 · 一起玩桌遊';
     sit(owl,true);

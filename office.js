@@ -6,8 +6,8 @@ const run = document.querySelector('#run');
 const roles = {
   owl: ['🦉 貓頭鷹｜行銷分析','找出受眾、切角和適合的社群形式。','貓頭鷹，請分析這個主題的受眾、切角及建議形式'],
   deer: ['🦌 鹿｜文案撰寫','把主題寫成「寵物溝通師想說」輪播。','鹿，請用「寵物溝通師想說」的語氣寫 IG 輪播，給我封面和四張內頁'],
-  strategist: ['行銷分析師','分析活動目標、受眾、渠道與成效。主題欄也可以補充預算、期限或已有數據。','請擔任 Talk YAO 的行銷分析師，依已提供資料分析目標、受眾、渠道、可執行測試與觀察指標。將假設與已知事實分開'],
-  copywriter: ['文案撰寫專員','撰寫可直接發布的社群貼文。可在主題欄指定 IG 或 Threads、語氣與行動指引。','請擔任 Talk YAO 的文案撰寫專員，依指定平台撰寫可直接貼上的繁體中文貼文，未指定時各給一版 IG 與 Threads。請勿虛構服務資訊或案例'],
+  strategist: ['Claude 狐狸｜行銷分析師','分析活動目標、受眾、渠道與成效。主題欄也可以補充預算、期限或已有數據。','請擔任 Talk YAO 的行銷分析師，依已提供資料分析目標、受眾、渠道、可執行測試與觀察指標。將假設與已知事實分開'],
+  copywriter: ['Claude 水獺｜文案撰寫專員','撰寫可直接發布的社群貼文。可在主題欄指定 IG 或 Threads、語氣與行動指引。','請擔任 Talk YAO 的文案撰寫專員，依指定平台撰寫可直接貼上的繁體中文貼文，未指定時各給一版 IG 與 Threads。請勿虛構服務資訊或案例'],
   team: ['🦉🦌 兩位一起工作','從貓頭鷹的選題分析，交接給鹿完成輪播。','兩位一起，先分析切角，再寫「寵物溝通師想說」IG 輪播的封面和四張內頁']
 };
 const sample = {
@@ -23,8 +23,8 @@ function addCard(key) {
   addText(...sample[key]);
 }
 document.querySelectorAll('[data-role]').forEach(button => {
-  button.addEventListener('click', event => {
-    if (button.classList.contains('actor') && event.detail && !matchMedia('(hover:hover) and (pointer:fine)').matches && !button.classList.contains('revealed')) {
+  button.addEventListener('click', () => {
+    if (button.classList.contains('actor') && !button.classList.contains('revealed')) {
       document.querySelectorAll('.actor.revealed').forEach(actor => actor.classList.remove('revealed'));
       button.classList.add('revealed');
       return;
