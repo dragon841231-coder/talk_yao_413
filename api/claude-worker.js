@@ -28,6 +28,17 @@ const DEER_SYSTEM = `你是「Talk YAO 寵物溝通工作室」的文案撰寫�
 第 5 張｜……
 每張 1～3 句、具體生活化，不誇大療效、不做醫療承諾。只輸出這五行。`;
 
+const STRATEGIST_SYSTEM = `你是 Talk YAO 寵物溝通工作室的行銷分析師。請以台灣繁體中文，根據使用者提供的活動或主題，依序列出行銷目標、優先受眾、渠道與具體內容建議、可小量執行的測試、成效指標。提供數據時只依實際資料判讀，並註明比較基準與限制。資料不足時，列出待驗證假設及需要補充的資訊，勿捏造數據、預算、訪談或成效。先給最重要的一項行動建議，維持可實作、精簡。`;
+
+const COPYWRITER_SYSTEM = `你是 Talk YAO 寵物溝通工作室的文案撰寫專員。用台灣繁體中文，寫具體、溫柔、自然且可直接發布的社群貼文。依使用者指定的平台、受眾、語氣與行動指引撰寫。未指定平台時，各輸出一版 IG 與 Threads，清楚標示版本。從生活片段或一句提問切入，結尾給一個自然的互動邀請。可以使用少量表情符號。勿使用 Markdown 粗體或分隔線，勿捏造客戶故事、價格、活動、服務結果或醫療承諾。`;
+
+const individualRoles = {
+  owl: OWL_SYSTEM,
+  deer: DEER_SYSTEM,
+  strategist: STRATEGIST_SYSTEM,
+  copywriter: COPYWRITER_SYSTEM
+};
+
 const MAX_TOPIC_LENGTH = 300;
 
 function corsHeaders(env, request) {
@@ -98,24 +109,21 @@ export async function handle(request, env) {
   let payload;
   try { payload = await request.json(); } catch { return json({ error: '格式錯誤' }, 400, cors); }
   const role = payload?.role;
-  if (!['owl', 'deer', 'team'].includes(role)) return json({ error: '角色不正確' }, 400, cors);
+  if (role !== 'team' && (typeof role !== 'string' || !Object.hasOwn(individualRoles, role))) return json({ error: '角色不正確' }, 400, cors);
   const topic = typeof payload.topic === 'string' ? payload.topic.trim() : '';
   if (!topic || [...topic].length > MAX_TOPIC_LENGTH) {
     return json({ error: '主題須為 1 到 300 字' }, 400, cors);
   }
 
   try {
-    const result = {};
-    if (role === 'owl' || role === 'team') {
-      result.owl = await askClaude(env, OWL_SYSTEM, `主題：${topic}`);
+    const brief = `主題與需求：${topic}`;
+    if (role !== 'team') {
+      const text = await askClaude(env, individualRoles[role], brief);
+      return json({ [role]: text }, 200, cors);
     }
-    if (role === 'deer' || role === 'team') {
-      const brief = result.owl
-        ? `主題：${topic}\n\n貓頭鷹交給你的行銷分析：\n${result.owl}\n\n請依照這份分析寫輪播。`
-        : `主題：${topic}`;
-      result.deer = await askClaude(env, DEER_SYSTEM, brief);
-    }
-    return json(result, 200, cors);
+    const owl = await askClaude(env, OWL_SYSTEM, brief);
+    const deer = await askClaude(env, DEER_SYSTEM, `${brief}\n\n貓頭鷹交給你的行銷分析：\n${owl}\n\n請依照這份分析寫輪播。`);
+    return json({ owl, deer }, 200, cors);
   } catch (err) {
     console.warn('Island Claude request failed:', err.message);
     return json({ error: '夥伴暫時無法完成任務，請稍後再試' }, 502, cors);
