@@ -7,6 +7,18 @@ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 function employee(id, route) {
   const button = document.getElementById(id);
+  const portrait = button.querySelector('.sprite');
+  const sprite = document.createElement('span');
+  sprite.className = 'sprite';
+  sprite.setAttribute('aria-hidden', 'true');
+  portrait.replaceWith(sprite);
+  portrait.className = 'sprite-body';
+  sprite.append(portrait);
+  for (const className of ['sprite-leg-near', 'sprite-leg-far']) {
+    const leg = portrait.cloneNode();
+    leg.className = className;
+    sprite.append(leg);
+  }
   return { button, route, index: 0 };
 }
 // Waypoints follow the open aisles around the outside of the sofa.
